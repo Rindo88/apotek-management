@@ -3,7 +3,7 @@ session_start();
 
 $host = "localhost";
 $port = "5432";
-$dbname = "db_apotek"; 
+$dbname = "testing_apotek"; 
 $user = "postgres";
 $password = "ahmad";
 
