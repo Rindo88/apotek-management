@@ -28,10 +28,13 @@ $password = "password_database";
 ### Menggunakan PHP Built-in Server
 
 1. Buka terminal/command prompt
-2. Masuk ke direktori project
+   ```bash
+   git clone https://github.com/Rindo88/apotek-management.git
+   ```
+3. Masuk ke direktori project
 
 ```bash
-cd test-apotek-progtur
+cd apotek-management
 ```
 
 3. Jalankan PHP development server
