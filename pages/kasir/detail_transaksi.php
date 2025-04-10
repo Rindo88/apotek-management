@@ -12,6 +12,28 @@ if (!isset($_GET['id_transaksi'])) {
 
 $id_transaksi = pg_escape_string($conn, $_GET['id_transaksi']);
 
+// Revisi delete item transaksi
+if (isset($_POST['delete'])) {
+    $id_detail = pg_escape_string($conn, $_POST['delete']);
+    
+    // Ambil data jumlah dan obat_id sebelum delete
+    $query_get = "SELECT jumlah, obat_id FROM transaksi_detail WHERE id = '$id_detail'";
+    $result_get = pg_query($conn, $query_get);
+    $detail = pg_fetch_assoc($result_get);
+    
+    // Kembalikan stok
+    $query_stok = "UPDATE obat SET stok = stok + {$detail['jumlah']} WHERE id = {$detail['obat_id']}";
+    pg_query($conn, $query_stok);
+    
+    // Hapus detail transaksi
+    $query = "DELETE FROM transaksi_detail WHERE id = '$id_detail'";
+    pg_query($conn, $query);
+    
+    header("Location: detail_transaksi.php?id_transaksi=$id_transaksi");
+    exit();
+}
+
+// Tambah item ke transaksi
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
     $id_obat = pg_escape_string($conn, $_POST['id_obat']);
     $jumlah = pg_escape_string($conn, $_POST['jumlah']);
@@ -31,32 +53,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
         $error_message = "Stok obat kurang!";
     } else {
         try {
-            $query = "INSERT INTO transaksi_detail (transaksi_id, obat_id, jumlah, harga_satuan, subtotal) VALUES ('$id_transaksi', '$id_obat', '$jumlah', '$harga', '$subtotal')";
-            pg_query($conn, $query);
+            // Begin transaction
+            pg_query($conn, "BEGIN");
 
-            // Update total transaksi
-            $query = "UPDATE transaksi SET total = total + '$subtotal' WHERE id = '$id_transaksi'";
-            pg_query($conn, $query);
+            // Insert detail transaksi
+            $query = "INSERT INTO transaksi_detail (transaksi_id, obat_id, jumlah, harga_satuan, subtotal) 
+                     VALUES ('$id_transaksi', '$id_obat', '$jumlah', '$harga', '$subtotal')";
+            $result = pg_query($conn, $query);
 
-            // Update stok obat
-            $query = "UPDATE obat SET stok = stok - '$jumlah' WHERE id = '$id_obat'";
-            pg_query($conn, $query);
+            if ($result) {
+                // Update total transaksi
+                $query = "UPDATE transaksi SET total = total + '$subtotal' WHERE id = '$id_transaksi'";
+                pg_query($conn, $query);
 
-            // Redirect ke halaman detail transaksi
-            header("Location: detail_transaksi.php?id_transaksi=$id_transaksi");
-            exit();
+                // Update stok obat
+                $query = "UPDATE obat SET stok = stok - '$jumlah' WHERE id = '$id_obat'";
+                pg_query($conn, $query);
+
+                // Commit transaction
+                pg_query($conn, "COMMIT");
+                
+                header("Location: detail_transaksi.php?id_transaksi=$id_transaksi");
+                exit();
+            } else {
+                pg_query($conn, "ROLLBACK");
+                $error_message = "Error inserting detail: " . pg_last_error($conn);
+            }
         } catch (Throwable $error) {
+            pg_query($conn, "ROLLBACK");
             $error_message = "Error: " . $error->getMessage();
         }
     }
-}
-
-if (isset($_POST['delete'])) {
-    $id_detail = pg_escape_string($conn, $_POST['delete']);
-    $query = "DELETE FROM transaksi_detail WHERE id = '$id_detail'";
-    pg_query($conn, $query);
-    header("Location: detail_transaksi.php?id_transaksi=$id_transaksi");
-    exit();
 }
 
 if (isset($_POST['increment'])) {

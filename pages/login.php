@@ -91,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit'])) {
 <body>
     <div class="login-container">
         <div class="login-header">
-            <img src="../assets/images/pharmacy-logo.png" alt="Logo" class="mb-4">
             <h2>Login Apotek</h2>
             <p class="text-muted">Silakan masuk untuk melanjutkan</p>
         </div>

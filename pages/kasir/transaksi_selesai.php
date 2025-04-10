@@ -105,6 +105,9 @@ $kembalian = $total_pembayaran - (float)$transaksi['total'];
         </div>
     </div>
     <a href="../index.php" class="btn btn-primary mt-3">Kembali ke Home</a>
+    <a href="../../utils/generate_receipt.php?id_transaksi=<?=$id_transaksi?>" class="btn btn-success mt-3 ml-2" target="_blank">
+        <i class="fas fa-print"></i> Cetak Struk
+    </a>
 </div>
 </body>
 </html>
